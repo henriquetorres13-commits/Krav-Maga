@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Krav Maga – Catálogo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#1d1d1b">
+<style>
+:root{
+  --bg:#f6f5f2; --card:#fff; --ink:#1d1d1b; --muted:#6b6b66; --line:#e2e0da; --accent:#c0392b; --chip:#ecebe6; --chipon:#1d1d1b; --chipoff:#f6f5f2; --warn:#fff3cd; --ok:#2e7d32;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#151514;--card:#1f1f1d;--ink:#eeeeea;--muted:#9a9a93;--line:#33332f;--accent:#e65a4a;--chip:#2a2a27;--chipon:#eeeeea;--chipoff:#151514;--warn:#4a3d10}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px 56px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line)}
+h1{font-size:20px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1 small{font-weight:400;color:var(--muted);font-size:13px}
+.search,.inp,.ta,.sel{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+.ta{min-height:70px;resize:vertical;line-height:1.5}
+.row{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none;align-items:center}
+.row::-webkit-scrollbar{display:none}
+.lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:8px}
+.chip,.btn{flex:0 0 auto;border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:6px 12px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip.on,.btn.pri{background:var(--chipon);color:var(--chipoff);border-color:var(--chipon)}
+.btn.dan{color:var(--accent);border-color:var(--accent)}
+.chip.zero{opacity:.45}
+.chip .n{font-size:12px;opacity:.7}
+.dot{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.25);display:inline-block}
+.list{display:grid;gap:12px;margin-top:16px;grid-template-columns:1fr}
+@media(min-width:640px){.list{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;cursor:pointer;min-height:96px}
+.card:hover{border-color:var(--muted)}
+.thumb{width:96px;flex:0 0 96px;background:#fff center/cover no-repeat;border-right:1px solid var(--line)}
+.cbody{padding:10px 12px;min-width:0;flex:1}
+.cbody h3{margin:0;font-size:16px;line-height:1.25}
+.cbody .pt{color:var(--muted);font-size:14px;margin-top:1px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
+.fav{margin-left:auto;font-size:20px;line-height:1;background:none;border:0;color:var(--muted);cursor:pointer;padding:4px}
+.fav.on{color:#e0a800}
+.empty{color:var(--muted);text-align:center;padding:40px 0}
+.detail{display:none}
+body.show-detail .detail{display:block}
+body.show-detail .home{display:none}
+.bar{display:flex;gap:8px;align-items:center;margin:14px 0;flex-wrap:wrap}
+.back{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;padding:4px 0}
+.detail h2{margin:4px 0 0;font-size:24px;line-height:1.2}
+.detail .pt{color:var(--muted);margin-top:2px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:14px 0}
+.box h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.pg{font-size:12px;color:var(--muted);text-align:center;margin:22px 0 6px;display:flex;align-items:center;gap:10px}
+.pg:before,.pg:after{content:"";flex:1;border-top:1px solid var(--line)}
+.p{margin:12px 0}
+.p b.l{display:inline-block;background:var(--ink);color:var(--bg);border-radius:6px;padding:0 8px;margin-right:6px;font-size:13px;font-weight:600}
+.p.pt2{color:var(--muted);border-left:3px solid var(--line);padding-left:10px;margin-top:-6px}
+body.hl .p.unsure{background:var(--warn);border-radius:6px;box-shadow:0 0 0 4px var(--warn)}
+.fig{margin:14px 0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:center}
+.fig img{display:block;max-width:100%;max-height:560px;margin:0 auto;cursor:zoom-in}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:20;padding:12px;overflow:auto}
+.lb.full{display:block}
+.lb.full img{max-width:none;max-height:none;width:auto;cursor:zoom-out}
+.lb.on{display:flex}
+.lb img{max-width:100%;max-height:100%;background:#fff}
+.note{font-size:12px;color:var(--muted);margin-top:24px;text-align:center}
+.ed{background:var(--card);border:1px dashed var(--muted);border-radius:12px;padding:10px;margin:10px 0}
+.ed .tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ed .tools .btn{padding:3px 10px;font-size:13px}
+.ed img{max-width:220px;max-height:200px;display:block;background:#fff;border:1px solid var(--line)}
+.fld{margin:10px 0}
+.fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;z-index:30;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="home">
+    <header>
+      <h1>Krav Maga <small id="count"></small></h1>
+      <input id="q" class="search" type="search" placeholder="Buscar golpe, termo ou texto…" autocomplete="off">
+      <div class="lbl">Faixa</div><div class="row" id="belts"></div>
+      <div class="lbl">Tipo</div><div class="row" id="types"></div>
+      <div class="row"><button class="chip" id="favf">☆ Só favoritos</button><button class="chip" id="hlf" title="Destaca trechos que o leitor de texto (OCR) pode ter errado">⚠ Marcar trechos incertos</button></div>
+    </header>
+    <div class="list" id="list"></div>
+    <div class="row" style="margin-top:22px;justify-content:center">
+      <button class="chip" id="exp">⬇ Exportar minhas edições</button><button class="chip" id="expall">⬇ Exportar tudo</button>
+      <label class="chip" style="cursor:pointer">⬆ Importar dados ou edições<input id="imp" type="file" accept="application/json" hidden></label>
+    </div>
+    <div class="note" id="srcnote"></div>
+  </div>
+  <div class="detail" id="detail"></div>
+</div>
+<div class="lb" id="lb"><img alt=""></div>
+<div class="toast" id="toast"></div>
+<script>
+var BASE=[];
+var META={};
+var BELTS=[["branca","Branca","#f5f5f5"],["amarela","Amarela","#f2c200"],["laranja","Laranja","#f28c00"],["verde","Verde","#2e9e4f"],["azul","Azul","#2a6fdb"],["marrom","Marrom","#7a4a26"],["preta","Preta","#222"]];
+var TYPES=["Base","Queda","Soco","Cotovelada","Golpe de mão","Chute","Defesa","Soltura","Solo","Projeção","Arma","Livro"];
+var st={belt:"",type:"",q:"",fav:false,hl:false};
+var favs={},OV={},editing=null,idb=null,idbOk=false;
+try{favs=JSON.parse(localStorage.getItem("km_favs")||"{}")}catch(e){}
+function saveFavs(){try{localStorage.setItem("km_favs",JSON.stringify(favs))}catch(e){}}
+function $(s){return document.querySelector(s)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function norm(s){return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")}
+function toast(m){var t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast._t);toast._t=setTimeout(function(){t.style.display="none"},2200)}
+function beltInfo(k){return BELTS.filter(function(b){return b[0]==k})[0]||[k,k,"#999"]}
+function all(){return BASE.map(function(e){return OV[e.id]||e}).concat(Object.keys(OV).filter(function(id){return !BASE.some(function(b){return b.id==id})}).map(function(id){return OV[id]}))}
+function getE(id){return all().filter(function(e){return e.id==id})[0]}
+function hay(e){return norm([e.name,e.nome_pt,e.type,e.belt,(e.tags||[]).join(" "),e.resumo||""].concat(e.blocks.map(function(b){return b.t=="p"?(b.label||"")+" "+b.text+" "+(b.pt||""):""})).join(" "))}
+/* ---------- IndexedDB (edits) ---------- */
+function dbOpen(){return new Promise(function(res){try{var r=indexedDB.open("km_catalog",2);r.onupgradeneeded=function(){var d=r.result;if(!d.objectStoreNames.contains("ov"))d.createObjectStore("ov",{keyPath:"id"});if(!d.objectStoreNames.contains("base"))d.createObjectStore("base",{keyPath:"k"})};r.onsuccess=function(){idb=r.result;idbOk=true;res()};r.onerror=function(){res()}}catch(e){res()}})}
+function dbAll(){return new Promise(function(res){if(!idbOk)return res([]);try{var q=idb.transaction("ov").objectStore("ov").getAll();q.onsuccess=function(){res(q.result||[])};q.onerror=function(){res([])}}catch(e){res([])}})}
+function dbPut(e){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("ov","readwrite");t.objectStore("ov").put(e);t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
+function dbDel(id){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("ov","readwrite");t.objectStore("ov").delete(id);t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
+function dbGetBase(){return new Promise(function(res){if(!idbOk)return res(null);try{var q=idb.transaction("base").objectStore("base").get("main");q.onsuccess=function(){res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})}
+function dbSetBase(o){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("base","readwrite");t.objectStore("base").put({k:"main",entries:o.entries,meta:o.meta||{}});t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
+/* ---------- home ---------- */
+function count(fn){return all().filter(fn).length}
+function chip(label,n,on,cb,dot){
+  var b=document.createElement("button");b.className="chip"+(on?" on":"")+(n===0?" zero":"");
+  b.innerHTML=(dot?'<span class="dot" style="background:'+dot+'"></span>':"")+esc(label)+' <span class="n">'+(n==null?"":n)+"</span>";
+  b.onclick=cb;return b;
+}
+function renderFilters(){
+  var A=all(),bel=$("#belts");bel.innerHTML="";
+  bel.appendChild(chip("Todas",A.length,!st.belt,function(){st.belt="";render()}));
+  BELTS.forEach(function(b){bel.appendChild(chip(b[1],count(function(e){return e.belt==b[0]}),st.belt==b[0],function(){st.belt=st.belt==b[0]?"":b[0];render()},b[2]))});
+  var ty=$("#types");ty.innerHTML="";
+  ty.appendChild(chip("Todos",A.length,!st.type,function(){st.type="";render()}));
+  var tl=TYPES.slice();A.forEach(function(e){if(tl.indexOf(e.type)<0)tl.push(e.type)});
+  tl.forEach(function(t){ty.appendChild(chip(t,count(function(e){return e.type==t}),st.type==t,function(){st.type=st.type==t?"":t;render()}))});
+  $("#favf").className="chip"+(st.fav?" on":"");$("#favf").textContent=(st.fav?"★":"☆")+" Só favoritos";
+  $("#hlf").className="chip"+(st.hl?" on":"");
+}
+function filtered(){
+  var q=norm(st.q.trim());
+  return all().filter(function(e){
+    if(!e._h)e._h=hay(e);
+    return (!st.belt||e.belt==st.belt)&&(!st.type||e.type==st.type)&&(!st.fav||favs[e.id])&&(!q||q.split(/\s+/).every(function(w){return e._h.indexOf(w)>-1}));
+  });
+}
+function firstImg(e){var b=e.blocks.filter(function(x){return x.t=="img"})[0];return b?b.src:""}
+function render(){
+  document.body.classList.toggle("hl",st.hl);
+  renderFilters();
+  var L=filtered(),el=$("#list");el.innerHTML="";
+  $("#count").textContent=L.length+" de "+all().length+" golpes";
+  if(!all().length){el.innerHTML='<div class="box" style="grid-column:1/-1"><h4>Primeiro uso</h4>Este app não traz o conteúdo do livro. Toque em <b>⬆ Importar dados</b> (abaixo) e escolha o arquivo <b>krav-maga-dados.json</b>. Isso é feito uma vez em cada aparelho; depois tudo funciona offline.</div>';return}
+  if(!L.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nada encontrado.</div>';return}
+  L.forEach(function(e){
+    var b=beltInfo(e.belt),im=firstImg(e);
+    var c=document.createElement("div");c.className="card";
+    c.innerHTML='<div class="thumb"'+(im?' style="background-image:url('+im+')"':"")+'></div><div class="cbody"><h3>'+esc(e.name)+'</h3><div class="pt">'+esc(e.nome_pt||"")+'</div><div class="meta"><span><span class="dot" style="background:'+b[2]+'"></span> '+esc(b[1])+'</span><span>'+esc(e.type)+'</span><span>pág. '+esc(e.pages)+'</span>'+(OV[e.id]?'<span title="Editado por você">✎</span>':"")+'<button class="fav'+(favs[e.id]?" on":"")+'" aria-label="Favorito">'+(favs[e.id]?"★":"☆")+"</button></div></div>";
+    c.querySelector(".fav").onclick=function(ev){ev.stopPropagation();toggleFav(e.id);render()};
+    c.onclick=function(){location.hash="#/"+e.id};
+    el.appendChild(c);
+  });
+}
+function toggleFav(id){favs[id]=!favs[id];if(!favs[id])delete favs[id];saveFavs()}
+/* ---------- detail (read) ---------- */
+function blocksHTML(e){
+  var h="",lastpg=null;
+  e.blocks.forEach(function(b){
+    if(b.t=="h")return;
+    if(b.pg!=null&&b.pg!==lastpg){h+='<div class="pg">pág. '+esc(b.pg)+"</div>";lastpg=b.pg}
+    if(b.t=="img"){h+='<div class="fig"><img src="'+b.src+'" alt=""></div>'}
+    else{
+      var unsure=(b.c!=null&&b.c<88)?" unsure":"";
+      h+='<div class="p'+unsure+'">'+(b.label?'<b class="l">'+esc(b.label)+"</b>":"")+esc(b.text)+"</div>";
+      if(b.pt)h+='<div class="p pt2">'+esc(b.pt)+"</div>";
+    }
+  });
+  return h;
+}
+function showDetail(id){
+  editing=null;
+  var e=getE(id);
+  if(!e){document.body.classList.remove("show-detail");return}
+  var b=beltInfo(e.belt),h='<div class="bar"><button class="back" onclick="history.back()">← Voltar</button><span style="flex:1"></span><button class="btn" id="bedit">✎ Editar</button></div>';
+  h+='<h2>'+esc(e.name)+'</h2>'+(e.nome_pt?'<div class="pt">'+esc(e.nome_pt)+"</div>":"");
+  h+='<div class="meta" style="margin-top:8px"><span><span class="dot" style="background:'+b[2]+'"></span> Faixa '+esc(b[1].toLowerCase())+'</span><span>'+esc(e.type)+'</span><span>pág. '+esc(e.pages)+'</span>'+(e.partial?"<span>continua nas próximas páginas</span>":"")+'<button class="fav'+(favs[e.id]?" on":"")+'" id="dfav">'+(favs[e.id]?"★":"☆")+"</button></div>";
+  if(e.resumo)h+='<div class="box"><h4>Resumo (PT)</h4>'+esc(e.resumo)+"</div>";
+  h+=blocksHTML(e);
+  var d=$("#detail");d.innerHTML=h;
+  $("#dfav").onclick=function(){toggleFav(id);showDetail(id)};
+  $("#bedit").onclick=function(){startEdit(id)};
+  d.querySelectorAll(".fig img").forEach(function(im){im.onclick=function(){$("#lb img").src=im.src;$("#lb").classList.add("on")}});
+  document.body.classList.add("show-detail");window.scrollTo(0,0);
+}
+/* ---------- editing ---------- */
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function startEdit(id){editing=clone(getE(id));delete editing._h;drawEdit();window.scrollTo(0,0)}
+function fileToDataURL(file,cb){
+  var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){
+    var s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+    var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);cb(c.toDataURL("image/jpeg",.85))};im.src=fr.result};fr.readAsDataURL(file);
+}
+function pickFile(cb){var i=document.createElement("input");i.type="file";i.accept="image/*";i.onchange=function(){if(i.files[0])fileToDataURL(i.files[0],cb)};i.click()}
+function syncEd(){
+  var d=$("#detail");
+  ["name","nome_pt","resumo","pages"].forEach(function(k){var el=d.querySelector('[data-f="'+k+'"]');if(el)editing[k]=el.value});
+  editing.belt=d.querySelector('[data-f="belt"]').value;editing.type=d.querySelector('[data-f="type"]').value;
+  editing.tags=d.querySelector('[data-f="tags"]').value.split(",").map(function(s){return s.trim()}).filter(Boolean);
+  d.querySelectorAll("[data-i]").forEach(function(el){
+    var i=+el.getAttribute("data-i"),k=el.getAttribute("data-k"),b=editing.blocks[i];if(!b)return;
+    b[k]=el.value;
+  });
+}
+function drawEdit(){
+  var e=editing,d=$("#detail"),h='<div class="bar"><strong>Editando</strong><span style="flex:1"></span><button class="btn pri" id="esave">Salvar</button><button class="btn" id="ecancel">Cancelar</button></div>';
+  h+='<div class="fld"><label>Nome (como no livro)</label><input class="inp" data-f="name" value="'+esc(e.name)+'"></div>';
+  h+='<div class="fld"><label>Nome em português</label><input class="inp" data-f="nome_pt" value="'+esc(e.nome_pt||"")+'"></div>';
+  h+='<div class="two"><div class="fld"><label>Faixa</label><select class="sel" data-f="belt">'+BELTS.map(function(b){return '<option value="'+b[0]+'"'+(b[0]==e.belt?" selected":"")+">"+b[1]+"</option>"}).join("")+'</select></div>';
+  var tl=TYPES.slice();if(tl.indexOf(e.type)<0)tl.push(e.type);
+  h+='<div class="fld"><label>Tipo</label><select class="sel" data-f="type">'+tl.map(function(t){return '<option'+(t==e.type?" selected":"")+">"+esc(t)+"</option>"}).join("")+"</select></div></div>";
+  h+='<div class="two"><div class="fld"><label>Páginas</label><input class="inp" data-f="pages" value="'+esc(e.pages)+'"></div><div class="fld"><label>Marcadores (vírgula)</label><input class="inp" data-f="tags" value="'+esc((e.tags||[]).join(", "))+'"></div></div>';
+  h+='<div class="fld"><label>Resumo em português (opcional)</label><textarea class="ta" data-f="resumo">'+esc(e.resumo||"")+"</textarea></div>";
+  h+='<div class="tools" style="margin:6px 0"><button class="btn" data-add="0:p">+ texto no início</button><button class="btn" data-add="0:i">+ foto no início</button></div>';
+  e.blocks.forEach(function(b,i){
+    if(b.t=="h"){return}
+    h+='<div class="ed">';
+    if(b.t=="img"){h+='<img src="'+b.src+'" alt="">'}
+    else{
+      h+='<div class="two" style="grid-template-columns:110px 1fr"><div><label style="font-size:11px;color:var(--muted)">Rótulo</label><input class="inp" data-i="'+i+'" data-k="label" value="'+esc(b.label||"")+'" placeholder="Picture A:"></div><div></div></div>';
+      h+='<label style="font-size:11px;color:var(--muted)">Texto (EN)</label><textarea class="ta" data-i="'+i+'" data-k="text">'+esc(b.text)+"</textarea>";
+      h+='<label style="font-size:11px;color:var(--muted)">Tradução (PT)</label><textarea class="ta" data-i="'+i+'" data-k="pt">'+esc(b.pt||"")+"</textarea>";
+    }
+    h+='<div class="tools"><button class="btn" data-mv="'+i+':-1">↑</button><button class="btn" data-mv="'+i+':1">↓</button>'+(b.t=="img"?'<button class="btn" data-rep="'+i+'">Trocar foto</button>':"")+'<button class="btn dan" data-del="'+i+'">Excluir</button><button class="btn" data-add="'+(i+1)+':p">+ texto abaixo</button><button class="btn" data-add="'+(i+1)+':i">+ foto abaixo</button></div></div>';
+  });
+  h+='<div class="bar"><button class="btn pri" id="esave2">Salvar</button><button class="btn" id="ecancel2">Cancelar</button><span style="flex:1"></span><button class="btn dan" id="erestore"'+(OV[e.id]?"":" disabled")+'>Restaurar original</button></div>';
+  d.innerHTML=h;
+  var rd=function(fn){return function(ev){syncEd();fn(ev.currentTarget);drawEdit()}};
+  d.querySelectorAll("[data-mv]").forEach(function(b){b.onclick=rd(function(el){var p=el.getAttribute("data-mv").split(":"),i=+p[0],j=i+ +p[1];if(j<0||j>=editing.blocks.length)return;var t=editing.blocks[i];editing.blocks[i]=editing.blocks[j];editing.blocks[j]=t})});
+  d.querySelectorAll("[data-del]").forEach(function(b){b.onclick=function(ev){if(!confirm("Excluir este bloco?"))return;syncEd();editing.blocks.splice(+ev.currentTarget.getAttribute("data-del"),1);drawEdit()}});
+  d.querySelectorAll("[data-add]").forEach(function(b){b.onclick=function(ev){var p=ev.currentTarget.getAttribute("data-add").split(":"),i=+p[0];syncEd();var pg=(editing.blocks[Math.max(0,i-1)]||{}).pg;
+    if(p[1]=="p"){editing.blocks.splice(i,0,{t:"p",label:"",text:"",pg:pg});drawEdit()}
+    else pickFile(function(u){editing.blocks.splice(i,0,{t:"img",src:u,pg:pg});drawEdit()})}});
+  d.querySelectorAll("[data-rep]").forEach(function(b){b.onclick=function(ev){var i=+ev.currentTarget.getAttribute("data-rep");syncEd();pickFile(function(u){editing.blocks[i].src=u;drawEdit()})}});
+  var save=function(){syncEd();editing.id=e.id;delete editing._h;dbPut(clone(editing)).then(function(ok){OV[e.id]=clone(editing);toast(ok?"Salvo neste aparelho":"Salvo só nesta sessão (o navegador não permite guardar)");editing=null;showDetail(e.id)})};
+  $("#esave").onclick=save;$("#esave2").onclick=save;
+  var cancel=function(){editing=null;showDetail(e.id)};$("#ecancel").onclick=cancel;$("#ecancel2").onclick=cancel;
+  $("#erestore").onclick=function(){if(!confirm("Descartar todas as suas edições deste golpe?"))return;dbDel(e.id).then(function(){delete OV[e.id];editing=null;toast("Original restaurado");showDetail(e.id)})};
+}
+/* ---------- backup ---------- */
+$("#exp").onclick=function(){
+  var arr=Object.keys(OV).map(function(k){var o=clone(OV[k]);delete o._h;return o});
+  if(!arr.length){toast("Você ainda não editou nada");return}
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,edits:arr})],{type:"application/json"}));
+  a.download="krav-maga-edicoes-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
+};
+$("#imp").onchange=function(){
+  var f=this.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){try{var o=JSON.parse(r.result),n=0;
+    if(o.entries){BASE=o.entries;META=o.meta||{};dbSetBase(o).then(function(ok){toast(ok?o.entries.length+" golpes importados":"Importado só nesta sessão");$("#srcnote").textContent=META.note||"";render()});}
+    if(o.edits){o.edits.forEach(function(e){OV[e.id]=e;dbPut(e);n++});toast(n+" edição(ões) importada(s)");render()}
+    if(!o.entries&&!o.edits)toast("Arquivo não reconhecido")}catch(x){toast("Arquivo inválido")}};
+  r.readAsText(f);this.value="";
+};
+$("#expall").onclick=function(){
+  var d=all().map(function(e){var o=clone(e);delete o._h;return o});
+  if(!d.length){toast("Nada para exportar");return}
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,meta:META,entries:d})],{type:"application/json"}));
+  a.download="krav-maga-dados-completo-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
+};
+/* ---------- wiring ---------- */
+$("#lb").onclick=function(ev){var i=this.querySelector("img");if(!this.classList.contains("full")){this.classList.add("full");i.style.width=Math.max(i.naturalWidth*2,window.innerWidth*2.2)+"px"}else{this.classList.remove("full");i.style.width="";this.classList.remove("on")}};
+$("#q").oninput=function(){st.q=this.value;render()};
+$("#favf").onclick=function(){st.fav=!st.fav;render()};
+$("#hlf").onclick=function(){st.hl=!st.hl;render()};
+function route(){
+  var m=location.hash.match(/^#\/(.+)$/);
+  if(m)showDetail(decodeURIComponent(m[1]));
+  else{document.body.classList.remove("show-detail");render()}
+}
+window.addEventListener("hashchange",route);
+dbOpen().then(function(){return Promise.all([dbAll(),dbGetBase()])}).then(function(r){r[0].forEach(function(x){OV[x.id]=x});if(r[1]){BASE=r[1].entries||[];META=r[1].meta||{}}$("#srcnote").textContent=META.note||"";route()});
+try{if("serviceWorker"in navigator&&location.protocol.indexOf("http")==0)navigator.serviceWorker.register("sw.js")}catch(e){}
+</script>
+</body>
+</html>
