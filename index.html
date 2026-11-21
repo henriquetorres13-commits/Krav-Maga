@@ -75,6 +75,16 @@ body.hl .p.unsure{background:var(--warn);border-radius:6px;box-shadow:0 0 0 4px 
 .fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;z-index:30;display:none}
+.dlg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-start;justify-content:center;z-index:25;padding:16px;overflow:auto}
+.dlg.on{display:flex}
+.dlg .in{background:var(--card);color:var(--ink);border-radius:14px;max-width:640px;width:100%;padding:16px}
+.dlg h3{margin:0 0 6px;font-size:18px}
+.dlg .sum{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;margin:8px 0 12px}
+.dlg .cf{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0}
+.dlg .cf b{display:block}
+.dlg .cf small{color:var(--muted)}
+.dlg .cf select{margin-top:6px}
+.dlg .bulk{display:flex;flex-wrap:wrap;gap:6px}
 </style>
 </head>
 <body>
@@ -98,6 +108,7 @@ body.hl .p.unsure{background:var(--warn);border-radius:6px;box-shadow:0 0 0 4px 
 </div>
 <div class="lb" id="lb"><img alt=""></div>
 <div class="toast" id="toast"></div>
+<div class="dlg" id="dlg"><div class="in" id="dlgin"></div></div>
 <script>
 var BASE=[];
 var META={};
@@ -116,12 +127,15 @@ function all(){return BASE.map(function(e){return OV[e.id]||e}).concat(Object.ke
 function getE(id){return all().filter(function(e){return e.id==id})[0]}
 function hay(e){return norm([e.name,e.nome_pt,e.type,e.belt,(e.tags||[]).join(" "),e.resumo||""].concat(e.blocks.map(function(b){return b.t=="p"?(b.label||"")+" "+b.text+" "+(b.pt||""):""})).join(" "))}
 /* ---------- IndexedDB (edits) ---------- */
-function dbOpen(){return new Promise(function(res){try{var r=indexedDB.open("km_catalog",2);r.onupgradeneeded=function(){var d=r.result;if(!d.objectStoreNames.contains("ov"))d.createObjectStore("ov",{keyPath:"id"});if(!d.objectStoreNames.contains("base"))d.createObjectStore("base",{keyPath:"k"})};r.onsuccess=function(){idb=r.result;idbOk=true;res()};r.onerror=function(){res()}}catch(e){res()}})}
+function dbOpen(){return new Promise(function(res){try{var r=indexedDB.open("km_catalog",3);r.onupgradeneeded=function(ev){var d=r.result,tx=r.transaction;if(!d.objectStoreNames.contains("ov"))d.createObjectStore("ov",{keyPath:"id"});if(!d.objectStoreNames.contains("base"))d.createObjectStore("base",{keyPath:"k"});if(!d.objectStoreNames.contains("entries"))d.createObjectStore("entries",{keyPath:"id"});
+  if(ev.oldVersion>0&&ev.oldVersion<3){var bs=tx.objectStore("base"),g=bs.get("main");g.onsuccess=function(){var m=g.result;if(m){var es=tx.objectStore("entries");(m.entries||[]).forEach(function(e,n){if(e&&e.id!=null){e._o=n;es.put(e)}});bs.put({k:"meta",meta:m.meta||{}});bs.delete("main")}}}};
+  r.onsuccess=function(){idb=r.result;idbOk=true;res()};r.onerror=function(){res()}}catch(e){res()}})}
 function dbAll(){return new Promise(function(res){if(!idbOk)return res([]);try{var q=idb.transaction("ov").objectStore("ov").getAll();q.onsuccess=function(){res(q.result||[])};q.onerror=function(){res([])}}catch(e){res([])}})}
 function dbPut(e){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("ov","readwrite");t.objectStore("ov").put(e);t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
 function dbDel(id){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("ov","readwrite");t.objectStore("ov").delete(id);t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
-function dbGetBase(){return new Promise(function(res){if(!idbOk)return res(null);try{var q=idb.transaction("base").objectStore("base").get("main");q.onsuccess=function(){res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})}
-function dbSetBase(o){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("base","readwrite");t.objectStore("base").put({k:"main",entries:o.entries,meta:o.meta||{}});t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
+function dbAllBase(){return new Promise(function(res){if(!idbOk)return res([]);try{var q=idb.transaction("entries").objectStore("entries").getAll();q.onsuccess=function(){res(q.result||[])};q.onerror=function(){res([])}}catch(e){res([])}})}
+function dbGetMeta(){return new Promise(function(res){if(!idbOk)return res({});try{var q=idb.transaction("base").objectStore("base").get("meta");q.onsuccess=function(){res(q.result?q.result.meta||{}:{})};q.onerror=function(){res({})}}catch(e){res({})}})}
+function dbApply(puts,delOv,meta){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction(["entries","base","ov"],"readwrite"),es=t.objectStore("entries"),ov=t.objectStore("ov");puts.forEach(function(e){es.put(e)});delOv.forEach(function(id){ov.delete(id)});if(meta)t.objectStore("base").put({k:"meta",meta:meta});t.oncomplete=function(){res(true)};t.onerror=function(){res(false)};t.onabort=function(){res(false)}}catch(x){res(false)}})}
 /* ---------- home ---------- */
 function count(fn){return all().filter(fn).length}
 function chip(label,n,on,cb,dot){
@@ -153,7 +167,7 @@ function render(){
   renderFilters();
   var L=filtered(),el=$("#list");el.innerHTML="";
   $("#count").textContent=L.length+" de "+all().length+" golpes";
-  if(!all().length){el.innerHTML='<div class="box" style="grid-column:1/-1"><h4>Primeiro uso</h4>Este app não traz o conteúdo do livro. Toque em <b>⬆ Importar dados</b> (abaixo) e escolha o arquivo <b>krav-maga-dados.json</b>. Isso é feito uma vez em cada aparelho; depois tudo funciona offline.</div>';return}
+  if(!all().length){el.innerHTML='<div class="box" style="grid-column:1/-1"><h4>Primeiro uso</h4>Este app não traz o conteúdo do livro. Toque em <b>⬆ Importar dados</b> (abaixo) e escolha o arquivo <b>krav-maga-dados.json</b>. Você pode importar um arquivo por faixa: a importação é incremental e pergunta o que fazer com golpes repetidos. Depois disso tudo funciona offline.</div>';return}
   if(!L.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nada encontrado.</div>';return}
   L.forEach(function(e){
     var b=beltInfo(e.belt),im=firstImg(e);
@@ -256,16 +270,73 @@ $("#exp").onclick=function(){
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,edits:arr})],{type:"application/json"}));
   a.download="krav-maga-edicoes-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
 };
+/* ---------- importação incremental ---------- */
+function beltRank(b){for(var i=0;i<BELTS.length;i++)if(BELTS[i][0]==b)return i;return 99}
+function sortBase(){BASE.sort(function(a,b){return beltRank(a.belt)-beltRank(b.belt)||(a._o||0)-(b._o||0)})}
+function nextO(){var m=-1;BASE.forEach(function(e){if(e._o>m)m=e._o});return m+1}
+function keyOf(e){return norm(String(e.belt||"")+"|"+String(e.name||""))}
+function sig(e){return JSON.stringify([e.name,e.nome_pt||"",e.belt,e.type,String(e.pages==null?"":e.pages),e.resumo||"",(e.tags||[]).join(","),(e.blocks||[]).map(function(b){return b.t=="img"?["i",(b.src||"").length,(b.src||"").slice(-40),b.pg]:[b.t,b.label||"",b.text||"",b.pt||"",b.pg]})])}
+function uniqId(id,taken){var n=2;while(taken[id+"-"+n])n++;return id+"-"+n}
+function planImport(o){
+  var cur=all(),byId={},byKey={};
+  cur.forEach(function(e){byId[e.id]=e;byKey[keyOf(e)]=e});
+  var plan={news:[],same:0,bad:0,dupfile:0,conf:[],meta:o.meta||{}},seen={};
+  o.entries.forEach(function(n){
+    if(!n||n.id==null||!n.name||!Array.isArray(n.blocks)){plan.bad++;return}
+    if(seen[n.id]){plan.dupfile++;return}seen[n.id]=1;
+    var ex=byId[n.id]||byKey[keyOf(n)];
+    if(!ex){plan.news.push(n);return}
+    if(sig(ex)==sig(n)){plan.same++;return}
+    plan.conf.push({n:n,ex:ex,edited:!!OV[ex.id],by:byId[n.id]?"mesmo id":"mesmo nome e faixa"});
+  });
+  return plan;
+}
+function dlgClose(){$("#dlg").classList.remove("on");$("#dlgin").innerHTML=""}
+function showImportDialog(plan){
+  var h='<h3>Importar dados</h3><div class="sum"><span><b>'+plan.news.length+'</b> novos</span><span><b>'+plan.same+'</b> já existem iguais (ignorados)</span><span><b>'+plan.conf.length+'</b> em conflito</span>'+(plan.bad?'<span>'+plan.bad+' inválidos (ignorados)</span>':"")+(plan.dupfile?'<span>'+plan.dupfile+' repetidos no arquivo (ignorados)</span>':"")+"</div>";
+  if(plan.conf.length){
+    h+='<div class="bulk"><button class="btn" data-all="ig">Ignorar todos</button><button class="btn" data-all="rp">Substituir todos</button><button class="btn" data-all="cp">Copiar todos</button></div>';
+    plan.conf.forEach(function(c,i){
+      h+='<div class="cf"><b>'+esc(c.n.name)+'</b><small>'+esc(beltInfo(c.n.belt)[1])+" · "+esc(c.n.type)+" · pág. "+esc(c.n.pages)+" — já existe ("+c.by+")"+(c.edited?" · ✎ você editou":"")+'</small><select class="sel" data-ci="'+i+'"><option value="ig">Ignorar (manter o atual)</option><option value="rp">Substituir pelo do arquivo</option><option value="cp">Adicionar como cópia</option></select></div>';
+    });
+  }
+  h+='<div class="bar"><button class="btn pri" id="dg-ok">Confirmar</button><button class="btn" id="dg-no">Cancelar</button></div>';
+  var d=$("#dlgin");d.innerHTML=h;$("#dlg").classList.add("on");
+  d.querySelectorAll("[data-all]").forEach(function(b){b.onclick=function(){var v=b.getAttribute("data-all");d.querySelectorAll("select[data-ci]").forEach(function(s){s.value=v})}});
+  $("#dg-no").onclick=dlgClose;
+  $("#dg-ok").onclick=function(){
+    var ch=[];d.querySelectorAll("select[data-ci]").forEach(function(s){ch[+s.getAttribute("data-ci")]=s.value});
+    var lost=plan.conf.filter(function(c,i){return ch[i]=="rp"&&c.edited}).length;
+    if(lost&&!confirm(lost+" golpe(s) que você editou serão substituídos e as suas edições, descartadas. Continuar?"))return;
+    dlgClose();applyImport(plan,ch);
+  };
+}
+function applyImport(plan,ch){
+  var puts=[],del=[],c={n:0,r:0,c:0,i:0},taken={},o=nextO();
+  all().forEach(function(e){taken[e.id]=1});
+  plan.news.forEach(function(n){var n2=Object.assign({},n);n2._o=o++;if(taken[n2.id])n2.id=uniqId(n2.id,taken);taken[n2.id]=1;BASE.push(n2);puts.push(n2);c.n++});
+  plan.conf.forEach(function(x,i){
+    var v=ch[i]||"ig";
+    if(v=="rp"){var n2=Object.assign({},x.n,{id:x.ex.id}),k=-1;BASE.forEach(function(b,j){if(b.id==x.ex.id)k=j});n2._o=k>=0?BASE[k]._o:o++;if(k>=0)BASE[k]=n2;else BASE.push(n2);if(OV[x.ex.id]){delete OV[x.ex.id];del.push(x.ex.id)}puts.push(n2);c.r++}
+    else if(v=="cp"){var id2=taken[x.n.id]?uniqId(x.n.id,taken):x.n.id;taken[id2]=1;var n3=Object.assign({},x.n,{id:id2,_o:o++});BASE.push(n3);puts.push(n3);c.c++}
+    else c.i++;
+  });
+  if(plan.meta&&plan.meta.note&&!META.note)META.note=plan.meta.note;
+  sortBase();
+  var msg=c.n+" novos, "+c.r+" substituídos, "+c.c+" copiados, "+(c.i+plan.same)+" ignorados";
+  if(!puts.length&&!del.length){toast("Nada a importar: "+msg);render();return}
+  dbApply(puts,del,META).then(function(ok){toast(ok?msg:"Importado só nesta sessão (o navegador não permite guardar)");$("#srcnote").textContent=META.note||"";render()});
+}
 $("#imp").onchange=function(){
   var f=this.files[0];if(!f)return;var r=new FileReader();
   r.onload=function(){try{var o=JSON.parse(r.result),n=0;
-    if(o.entries){BASE=o.entries;META=o.meta||{};dbSetBase(o).then(function(ok){toast(ok?o.entries.length+" golpes importados":"Importado só nesta sessão");$("#srcnote").textContent=META.note||"";render()});}
+    if(o.entries){if(!Array.isArray(o.entries))throw 0;var pl=planImport(o);if(!pl.news.length&&!pl.conf.length){toast(pl.same?"Nada novo: os "+pl.same+" golpes já existem":"Nenhum golpe válido no arquivo")}else showImportDialog(pl)}
     if(o.edits){o.edits.forEach(function(e){OV[e.id]=e;dbPut(e);n++});toast(n+" edição(ões) importada(s)");render()}
     if(!o.entries&&!o.edits)toast("Arquivo não reconhecido")}catch(x){toast("Arquivo inválido")}};
   r.readAsText(f);this.value="";
 };
 $("#expall").onclick=function(){
-  var d=all().map(function(e){var o=clone(e);delete o._h;return o});
+  var d=all().map(function(e){var o=clone(e);delete o._h;delete o._o;return o});
   if(!d.length){toast("Nada para exportar");return}
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({v:1,meta:META,entries:d})],{type:"application/json"}));
   a.download="krav-maga-dados-completo-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
@@ -281,7 +352,7 @@ function route(){
   else{document.body.classList.remove("show-detail");render()}
 }
 window.addEventListener("hashchange",route);
-dbOpen().then(function(){return Promise.all([dbAll(),dbGetBase()])}).then(function(r){r[0].forEach(function(x){OV[x.id]=x});if(r[1]){BASE=r[1].entries||[];META=r[1].meta||{}}$("#srcnote").textContent=META.note||"";route()});
+dbOpen().then(function(){return Promise.all([dbAll(),dbAllBase(),dbGetMeta()])}).then(function(r){r[0].forEach(function(x){OV[x.id]=x});BASE=r[1]||[];sortBase();META=r[2]||{};$("#srcnote").textContent=META.note||"";route()});
 try{if("serviceWorker"in navigator&&location.protocol.indexOf("http")==0)navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
 </body>
