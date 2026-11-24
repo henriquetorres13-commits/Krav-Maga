@@ -58,7 +58,6 @@ body.show-detail .home{display:none}
 .p{margin:12px 0}
 .p b.l{display:inline-block;background:var(--ink);color:var(--bg);border-radius:6px;padding:0 8px;margin-right:6px;font-size:13px;font-weight:600}
 .p.pt2{color:var(--muted);border-left:3px solid var(--line);padding-left:10px;margin-top:-6px}
-body.hl .p.unsure{background:var(--warn);border-radius:6px;box-shadow:0 0 0 4px var(--warn)}
 .fig{margin:14px 0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:center}
 .fig img{display:block;max-width:100%;max-height:560px;margin:0 auto;cursor:zoom-in}
 .lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:20;padding:12px;overflow:auto}
@@ -85,22 +84,39 @@ body.hl .p.unsure{background:var(--warn);border-radius:6px;box-shadow:0 0 0 4px 
 .dlg .cf small{color:var(--muted)}
 .dlg .cf select{margin-top:6px}
 .dlg .bulk{display:flex;flex-wrap:wrap;gap:6px}
+.seg{display:flex;background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:3px;margin-top:10px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;padding:6px;border-radius:7px;cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+.tools2{display:flex;gap:8px;align-items:center;margin-top:10px}
+.badge{background:var(--accent);color:#fff;border-radius:999px;font-size:11px;padding:0 6px;line-height:16px}
+#fpanel{display:none}
+body.fopen #fpanel{display:block}
+#tools{display:none}
+body.tools #tools{display:block}
+.nav{display:flex;gap:8px;justify-content:space-between;align-items:center;margin:14px 0}
+.btn:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="home">
     <header>
-      <h1>Krav Maga <small id="count"></small></h1>
+      <h1><span>Krav Maga <small id="count"></small></span><button class="chip" id="menub" aria-label="Menu de importar e exportar">⋯</button></h1>
       <input id="q" class="search" type="search" placeholder="Buscar golpe, termo ou texto…" autocomplete="off">
-      <div class="lbl">Faixa</div><div class="row" id="belts"></div>
-      <div class="lbl">Tipo</div><div class="row" id="types"></div>
-      <div class="row"><button class="chip" id="favf">☆ Só favoritos</button><button class="chip" id="hlf" title="Destaca trechos que o leitor de texto (OCR) pode ter errado">⚠ Marcar trechos incertos</button></div>
+      <div class="seg"><button id="v-g">Golpes</button><button id="v-l">Livro na ordem</button></div>
+      <div class="tools2"><button class="chip" id="filb">Filtros</button></div>
+      <div id="fpanel">
+        <div class="lbl">Faixa</div><div class="row" id="belts"></div>
+        <div class="lbl">Tipo</div><div class="row" id="types"></div>
+        <div class="row"><button class="chip" id="favf">☆ Só favoritos</button></div>
+      </div>
     </header>
     <div class="list" id="list"></div>
-    <div class="row" style="margin-top:22px;justify-content:center">
-      <button class="chip" id="exp">⬇ Exportar minhas edições</button><button class="chip" id="expall">⬇ Exportar tudo</button>
-      <label class="chip" style="cursor:pointer">⬆ Importar dados ou edições<input id="imp" type="file" accept="application/json" hidden></label>
+    <div id="tools">
+      <div class="row" style="margin-top:22px;justify-content:center">
+        <button class="chip" id="exp">⬇ Exportar minhas edições</button><button class="chip" id="expall">⬇ Exportar tudo</button>
+        <label class="chip" style="cursor:pointer">⬆ Importar dados ou edições<input id="imp" type="file" accept="application/json" hidden></label>
+      </div>
     </div>
     <div class="note" id="srcnote"></div>
   </div>
@@ -112,11 +128,12 @@ body.hl .p.unsure{background:var(--warn);border-radius:6px;box-shadow:0 0 0 4px 
 <script>
 var BASE=[];
 var META={};
-var BELTS=[["branca","Branca","#f5f5f5"],["amarela","Amarela","#f2c200"],["laranja","Laranja","#f28c00"],["verde","Verde","#2e9e4f"],["azul","Azul","#2a6fdb"],["marrom","Marrom","#7a4a26"],["preta","Preta","#222"]];
+var BELTS=[["amarela","Amarela","#f2c200"],["laranja","Laranja","#f28c00"],["verde","Verde","#2e9e4f"],["azul","Azul","#2a6fdb"],["marrom","Marrom","#7a4a26"],["preta","Preta","#222"]];
 var TYPES=["Base","Queda","Soco","Cotovelada","Golpe de mão","Chute","Defesa","Soltura","Solo","Projeção","Arma","Livro"];
-var st={belt:"",type:"",q:"",fav:false,hl:false};
+var st={belt:"",type:"",q:"",fav:false,view:"golpes",fopen:false};
 var favs={},OV={},editing=null,idb=null,idbOk=false;
 try{favs=JSON.parse(localStorage.getItem("km_favs")||"{}")}catch(e){}
+try{if(localStorage.getItem("km_view")=="livro")st.view="livro"}catch(e){}
 function saveFavs(){try{localStorage.setItem("km_favs",JSON.stringify(favs))}catch(e){}}
 function $(s){return document.querySelector(s)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -137,37 +154,44 @@ function dbAllBase(){return new Promise(function(res){if(!idbOk)return res([]);t
 function dbGetMeta(){return new Promise(function(res){if(!idbOk)return res({});try{var q=idb.transaction("base").objectStore("base").get("meta");q.onsuccess=function(){res(q.result?q.result.meta||{}:{})};q.onerror=function(){res({})}}catch(e){res({})}})}
 function dbApply(puts,delOv,meta){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction(["entries","base","ov"],"readwrite"),es=t.objectStore("entries"),ov=t.objectStore("ov");puts.forEach(function(e){es.put(e)});delOv.forEach(function(id){ov.delete(id)});if(meta)t.objectStore("base").put({k:"meta",meta:meta});t.oncomplete=function(){res(true)};t.onerror=function(){res(false)};t.onabort=function(){res(false)}}catch(x){res(false)}})}
 /* ---------- home ---------- */
-function count(fn){return all().filter(fn).length}
+function viewAll(){return all().filter(function(e){return st.view=="livro"||e.type!="Livro"})}
+function pstart(e){var m=String(e.pages==null?"":e.pages).match(/\d+/);return m?+m[0]:0}
+function count(fn){return viewAll().filter(fn).length}
 function chip(label,n,on,cb,dot){
   var b=document.createElement("button");b.className="chip"+(on?" on":"")+(n===0?" zero":"");
   b.innerHTML=(dot?'<span class="dot" style="background:'+dot+'"></span>':"")+esc(label)+' <span class="n">'+(n==null?"":n)+"</span>";
   b.onclick=cb;return b;
 }
 function renderFilters(){
-  var A=all(),bel=$("#belts");bel.innerHTML="";
+  var A=viewAll(),bel=$("#belts");bel.innerHTML="";
   bel.appendChild(chip("Todas",A.length,!st.belt,function(){st.belt="";render()}));
   BELTS.forEach(function(b){bel.appendChild(chip(b[1],count(function(e){return e.belt==b[0]}),st.belt==b[0],function(){st.belt=st.belt==b[0]?"":b[0];render()},b[2]))});
   var ty=$("#types");ty.innerHTML="";
   ty.appendChild(chip("Todos",A.length,!st.type,function(){st.type="";render()}));
   var tl=TYPES.slice();A.forEach(function(e){if(tl.indexOf(e.type)<0)tl.push(e.type)});
-  tl.forEach(function(t){ty.appendChild(chip(t,count(function(e){return e.type==t}),st.type==t,function(){st.type=st.type==t?"":t;render()}))});
+  tl.forEach(function(t){var n=count(function(e){return e.type==t});if(!n&&st.type!=t)return;ty.appendChild(chip(t,n,st.type==t,function(){st.type=st.type==t?"":t;render()}))});
   $("#favf").className="chip"+(st.fav?" on":"");$("#favf").textContent=(st.fav?"★":"☆")+" Só favoritos";
-  $("#hlf").className="chip"+(st.hl?" on":"");
+  var nf=(st.belt?1:0)+(st.type?1:0)+(st.fav?1:0);
+  $("#filb").className="chip"+(st.fopen?" on":"");
+  $("#filb").innerHTML="Filtros"+(nf?' <span class="badge">'+nf+"</span>":"")+(st.fopen?" ▴":" ▾");
+  document.body.classList.toggle("fopen",st.fopen);
+  $("#v-g").className=st.view=="golpes"?"on":"";$("#v-l").className=st.view=="livro"?"on":"";
 }
 function filtered(){
   var q=norm(st.q.trim());
-  return all().filter(function(e){
+  var L=viewAll().filter(function(e){
     if(!e._h)e._h=hay(e);
     return (!st.belt||e.belt==st.belt)&&(!st.type||e.type==st.type)&&(!st.fav||favs[e.id])&&(!q||q.split(/\s+/).every(function(w){return e._h.indexOf(w)>-1}));
   });
+  if(st.view=="livro")L.sort(function(a,b){return beltRank(a.belt)-beltRank(b.belt)||pstart(a)-pstart(b)||(a._o||0)-(b._o||0)});
+  return L;
 }
 function firstImg(e){var b=e.blocks.filter(function(x){return x.t=="img"})[0];return b?b.src:""}
 function render(){
-  document.body.classList.toggle("hl",st.hl);
   renderFilters();
   var L=filtered(),el=$("#list");el.innerHTML="";
-  $("#count").textContent=L.length+" de "+all().length+" golpes";
-  if(!all().length){el.innerHTML='<div class="box" style="grid-column:1/-1"><h4>Primeiro uso</h4>Este app não traz o conteúdo do livro. Toque em <b>⬆ Importar dados</b> (abaixo) e escolha o arquivo <b>krav-maga-dados.json</b>. Você pode importar um arquivo por faixa: a importação é incremental e pergunta o que fazer com golpes repetidos. Depois disso tudo funciona offline.</div>';return}
+  $("#count").textContent=L.length+" de "+viewAll().length+(st.view=="livro"?" itens":" golpes");
+  if(!all().length){document.body.classList.add("tools");el.innerHTML='<div class="box" style="grid-column:1/-1"><h4>Primeiro uso</h4>Este app não traz o conteúdo do livro. Toque em <b>⬆ Importar dados</b> (abaixo) e escolha os arquivos <b>krav-maga-dados-&lt;faixa&gt;-&lt;parte&gt;.json</b>, um de cada vez. A importação é incremental e pergunta o que fazer com golpes repetidos. Depois disso tudo funciona offline. O botão <b>⋯</b> no topo mostra de novo as opções de importar e exportar.</div>';return}
   if(!L.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nada encontrado.</div>';return}
   L.forEach(function(e){
     var b=beltInfo(e.belt),im=firstImg(e);
@@ -202,8 +226,14 @@ function showDetail(id){
   h+='<h2>'+esc(e.name)+'</h2>'+(e.nome_pt?'<div class="pt">'+esc(e.nome_pt)+"</div>":"");
   h+='<div class="meta" style="margin-top:8px"><span><span class="dot" style="background:'+b[2]+'"></span> Faixa '+esc(b[1].toLowerCase())+'</span><span>'+esc(e.type)+'</span><span>pág. '+esc(e.pages)+'</span>'+(e.partial?"<span>continua nas próximas páginas</span>":"")+'<button class="fav'+(favs[e.id]?" on":"")+'" id="dfav">'+(favs[e.id]?"★":"☆")+"</button></div>";
   if(e.resumo)h+='<div class="box"><h4>Resumo (PT)</h4>'+esc(e.resumo)+"</div>";
-  h+=blocksHTML(e);
+  var S=filtered(),ix=-1;S.forEach(function(x,k){if(x.id==id)ix=k});
+  var nav="";
+  if(ix>=0&&S.length>1)nav='<div class="nav"><button class="btn nprev"'+(ix==0?" disabled":"")+'>← Anterior</button><span style="font-size:12px;color:var(--muted)">'+(ix+1)+" / "+S.length+'</span><button class="btn nnext"'+(ix==S.length-1?" disabled":"")+'>Próximo →</button></div>';
+  h+=nav+blocksHTML(e)+nav;
   var d=$("#detail");d.innerHTML=h;
+  var go=function(x){location.replace("#/"+encodeURIComponent(x.id))};
+  d.querySelectorAll(".nprev").forEach(function(b){b.onclick=function(){if(ix>0)go(S[ix-1])}});
+  d.querySelectorAll(".nnext").forEach(function(b){b.onclick=function(){if(ix<S.length-1)go(S[ix+1])}});
   $("#dfav").onclick=function(){toggleFav(id);showDetail(id)};
   $("#bedit").onclick=function(){startEdit(id)};
   d.querySelectorAll(".fig img").forEach(function(im){im.onclick=function(){$("#lb img").src=im.src;$("#lb").classList.add("on")}});
@@ -345,7 +375,11 @@ $("#expall").onclick=function(){
 $("#lb").onclick=function(ev){var i=this.querySelector("img");if(!this.classList.contains("full")){this.classList.add("full");i.style.width=Math.max(i.naturalWidth*2,window.innerWidth*2.2)+"px"}else{this.classList.remove("full");i.style.width="";this.classList.remove("on")}};
 $("#q").oninput=function(){st.q=this.value;render()};
 $("#favf").onclick=function(){st.fav=!st.fav;render()};
-$("#hlf").onclick=function(){st.hl=!st.hl;render()};
+function setView(v){st.view=v;if(v=="golpes"&&st.type=="Livro")st.type="";try{localStorage.setItem("km_view",v)}catch(e){}render()}
+$("#v-g").onclick=function(){setView("golpes")};
+$("#v-l").onclick=function(){setView("livro")};
+$("#filb").onclick=function(){st.fopen=!st.fopen;render()};
+$("#menub").onclick=function(){var b=document.body;b.classList.toggle("tools");if(b.classList.contains("tools"))$("#tools").scrollIntoView({behavior:"smooth"})};
 function route(){
   var m=location.hash.match(/^#\/(.+)$/);
   if(m)showDetail(decodeURIComponent(m[1]));
