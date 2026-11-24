@@ -120,6 +120,13 @@ details.metaed summary{cursor:pointer;color:var(--muted);font-size:14px}
 .gap{height:18px;display:flex;align-items:center;justify-content:center;gap:6px}
 .gap.on{height:auto;padding:4px 0}
 .gapb{background:none;border:0;color:var(--muted);opacity:.45;font-size:16px;line-height:1;padding:0 18px;cursor:pointer}
+
+.crop{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px}
+.cstage{position:relative;display:inline-block;line-height:0;touch-action:none;user-select:none;-webkit-user-select:none}
+.cstage img{max-width:calc(100vw - 24px);max-height:calc(100vh - 150px);background:#fff;display:block;-webkit-user-drag:none}
+.csel{display:none;position:absolute;border:2px dashed #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.55);pointer-events:none}
+.chint{color:#ddd;font-size:13px}
+.cbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 </style>
 </head>
 <body>
@@ -376,12 +383,42 @@ var edSel=null,edIns=null,edMeta=false;
 function edEmpty(b){return b.t=="p"&&!(b.label||"").trim()&&!(b.text||"").trim()&&!(b.pt||"").trim()}
 function edVis(i){var b=editing.blocks[i];if(!b||b.t=="h")return false;return i===edSel||!edEmpty(b)}
 function autosize(t){t.style.height="auto";t.style.height=Math.max(70,t.scrollHeight+2)+"px"}
+function nextVis(i){var j=i+1;while(j<editing.blocks.length&&!edVis(j))j++;return j}
 function toolsHTML(i,b){
-  return '<div class="tools"><button class="btn" data-mv="'+i+':-1">↑</button><button class="btn" data-mv="'+i+':1">↓</button>'+(b.t=="img"?'<button class="btn" data-rep="'+i+'">Trocar foto</button>':"")+'<button class="btn dan" data-del="'+i+'">Excluir</button><button class="btn" data-add="'+(i+1)+':p">+ texto abaixo</button><button class="btn" data-add="'+(i+1)+':i">+ foto abaixo</button><button class="btn pri" data-done="1">Pronto</button></div>';
+  var nx=editing.blocks[nextVis(i)],cm=b.t=="p"&&nx&&nx.t=="p";
+  return '<div class="tools"><button class="btn" data-mv="'+i+':-1">↑</button><button class="btn" data-mv="'+i+':1">↓</button>'+(b.t=="img"?'<button class="btn" data-crop="'+i+'">Recortar</button><button class="btn" data-rep="'+i+'">Trocar foto</button>':'<button class="btn" data-merge="'+i+'"'+(cm?"":" disabled")+'>Juntar com o de baixo</button>')+'<button class="btn dan" data-del="'+i+'">Excluir</button><button class="btn" data-add="'+(i+1)+':p">+ texto abaixo</button><button class="btn" data-add="'+(i+1)+':i">+ foto abaixo</button><button class="btn pri" data-done="1">Pronto</button></div>';
 }
 function gapHTML(i){
   if(edIns===i)return '<div class="gap on"><button class="btn" data-add="'+i+':p">+ texto</button><button class="btn" data-add="'+i+':i">+ foto</button><button class="btn" data-gap="x">✕</button></div>';
   return '<div class="gap"><button class="gapb" data-gap="'+i+'" aria-label="Inserir bloco aqui">＋</button></div>';
+}
+function cropDialog(src,cb){
+  var ov=document.createElement("div");ov.className="crop";
+  ov.innerHTML='<div class="cstage"><img alt=""><div class="csel"></div></div><div class="chint">Arraste sobre a foto para marcar a área que fica</div><div class="cbtns"><button class="btn pri" data-a="rep" disabled>Recortar</button><button class="btn" data-a="new" disabled>Recortar como nova foto</button><button class="btn" data-a="x">Cancelar</button></div>';
+  document.body.appendChild(ov);
+  var st=ov.querySelector(".cstage"),im=ov.querySelector("img"),sel=ov.querySelector(".csel"),R=null,start=null;
+  im.src=src;
+  var pos=function(ev){var r=im.getBoundingClientRect();return{x:Math.max(0,Math.min(r.width,ev.clientX-r.left)),y:Math.max(0,Math.min(r.height,ev.clientY-r.top)),W:r.width,H:r.height}};
+  st.onpointerdown=function(ev){ev.preventDefault();start=pos(ev);R=null;sel.style.display="none";try{st.setPointerCapture(ev.pointerId)}catch(x){}};
+  st.onpointermove=function(ev){
+    if(!start)return;var p=pos(ev);
+    R={x:Math.min(start.x,p.x),y:Math.min(start.y,p.y),w:Math.abs(p.x-start.x),h:Math.abs(p.y-start.y),W:p.W,H:p.H};
+    sel.style.cssText="display:block;left:"+R.x+"px;top:"+R.y+"px;width:"+R.w+"px;height:"+R.h+"px";
+  };
+  st.onpointerup=function(){
+    start=null;var ok=!!(R&&R.w>12&&R.h>12);
+    ov.querySelectorAll("[data-a=rep],[data-a=new]").forEach(function(b){b.disabled=!ok});
+  };
+  var done=function(asNew){
+    var s=im.naturalWidth/R.W,c=document.createElement("canvas");
+    c.width=Math.max(1,Math.round(R.w*s));c.height=Math.max(1,Math.round(R.h*s));
+    var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
+    x.drawImage(im,R.x*s,R.y*s,R.w*s,R.h*s,0,0,c.width,c.height);
+    var u=c.toDataURL("image/jpeg",.88);ov.remove();cb(u,asNew);
+  };
+  ov.querySelector("[data-a=rep]").onclick=function(){done(false)};
+  ov.querySelector("[data-a=new]").onclick=function(){done(true)};
+  ov.querySelector("[data-a=x]").onclick=function(){ov.remove()};
 }
 function drawEdit(o){
   o=o||{};
@@ -448,6 +485,21 @@ function drawEdit(o){
     var pg=(editing.blocks[Math.max(0,i-1)]||{}).pg;
     if(p[1]=="p"){editing.blocks.splice(i,0,{t:"p",label:"",text:"",pg:pg});edSel=i;drawEdit({focus:true})}
     else pickFile(function(u){editing.blocks.splice(i,0,{t:"img",src:u,pg:pg});edSel=i;drawEdit()});
+  }});
+  d.querySelectorAll("[data-merge]").forEach(function(b){b.onclick=rd(function(el){
+    var i=+el.getAttribute("data-merge"),j=nextVis(i),a=editing.blocks[i],c=editing.blocks[j];
+    if(!c||c.t!="p")return;
+    var jn=function(x,y){x=(x||"").trim();y=(y||"").trim();return x&&y?x+" "+y:x||y};
+    a.text=jn(a.text,c.text);a.pt=jn(a.pt,c.pt);if(!a.label)a.label=c.label||"";
+    editing.blocks.splice(j,1);edSel=i;
+  })});
+  d.querySelectorAll("[data-crop]").forEach(function(b){b.onclick=function(ev){
+    var i=+ev.currentTarget.getAttribute("data-crop");syncEd();
+    cropDialog(editing.blocks[i].src,function(u,asNew){
+      if(asNew){editing.blocks.splice(i+1,0,{t:"img",src:u,pg:editing.blocks[i].pg});edSel=i+1}
+      else editing.blocks[i].src=u;
+      drawEdit();
+    });
   }});
   d.querySelectorAll("[data-rep]").forEach(function(b){b.onclick=function(ev){
     var i=+ev.currentTarget.getAttribute("data-rep");syncEd();pickFile(function(u){editing.blocks[i].src=u;drawEdit()});
