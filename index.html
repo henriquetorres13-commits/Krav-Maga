@@ -32,11 +32,20 @@ h1 small{font-weight:400;color:var(--muted);font-size:13px}
 .chip.zero{opacity:.45}
 .chip .n{font-size:12px;opacity:.7}
 .dot{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.25);display:inline-block}
-.list{display:grid;gap:12px;margin-top:16px;grid-template-columns:1fr}
-@media(min-width:640px){.list{grid-template-columns:1fr 1fr}}
+#list{margin-top:6px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;cursor:pointer;min-height:96px}
 .card:hover{border-color:var(--muted)}
 .thumb{width:96px;flex:0 0 96px;background:#fff center/cover no-repeat;border-right:1px solid var(--line)}
+.grid{display:grid;gap:12px;margin:8px 0 4px;grid-template-columns:1fr}
+@media(min-width:640px){.grid{grid-template-columns:1fr 1fr}}
+.sec{margin-top:18px}
+.sech{width:100%;display:flex;align-items:center;gap:8px;background:none;border:0;border-bottom:2px solid var(--line);color:var(--ink);font:inherit;font-size:18px;font-weight:700;padding:6px 2px;cursor:pointer;text-align:left}
+.sech .n,.grph .n{font-size:12px;font-weight:400;color:var(--muted)}
+.sech .car,.grph .car{margin-left:auto;color:var(--muted);font-size:13px}
+.sech .dot{width:14px;height:14px}
+.grph{width:100%;display:flex;align-items:center;gap:8px;background:none;border:0;color:var(--muted);font:inherit;font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding:12px 2px 2px;cursor:pointer;text-align:left}
+.beth{font-size:18px;font-weight:700;margin:20px 0 4px;padding:6px 2px;border-bottom:2px solid var(--line);display:flex;align-items:center;gap:8px}
+.beth .n{font-size:12px;font-weight:400;color:var(--muted)}
 .cbody{padding:10px 12px;min-width:0;flex:1}
 .cbody h3{margin:0;font-size:16px;line-height:1.25}
 .cbody .pt{color:var(--muted);font-size:14px;margin-top:1px}
@@ -104,14 +113,14 @@ body.tools #tools{display:block}
       <h1><span>Krav Maga <small id="count"></small></span><button class="chip" id="menub" aria-label="Menu de importar e exportar">⋯</button></h1>
       <input id="q" class="search" type="search" placeholder="Buscar golpe, termo ou texto…" autocomplete="off">
       <div class="seg"><button id="v-g">Golpes</button><button id="v-l">Livro na ordem</button></div>
-      <div class="tools2"><button class="chip" id="filb">Filtros</button></div>
+      <div class="tools2"><button class="chip" id="filb">Filtros</button><button class="chip" id="colb">Recolher tudo</button></div>
       <div id="fpanel">
         <div class="lbl">Faixa</div><div class="row" id="belts"></div>
         <div class="lbl">Tipo</div><div class="row" id="types"></div>
         <div class="row"><button class="chip" id="favf">☆ Só favoritos</button></div>
       </div>
     </header>
-    <div class="list" id="list"></div>
+    <div id="list"></div>
     <div id="tools">
       <div class="row" style="margin-top:22px;justify-content:center">
         <button class="chip" id="exp">⬇ Exportar minhas edições</button><button class="chip" id="expall">⬇ Exportar tudo</button>
@@ -131,6 +140,8 @@ var META={};
 var BELTS=[["amarela","Amarela","#f2c200"],["laranja","Laranja","#f28c00"],["verde","Verde","#2e9e4f"],["azul","Azul","#2a6fdb"],["marrom","Marrom","#7a4a26"],["preta","Preta","#222"]];
 var TYPES=["Base","Queda","Soco","Cotovelada","Golpe de mão","Chute","Defesa","Soltura","Solo","Projeção","Arma","Livro"];
 var st={belt:"",type:"",q:"",fav:false,view:"golpes",fopen:false};
+var COL={};try{COL=JSON.parse(localStorage.getItem("km_col")||"{}")}catch(e){}
+function saveCol(){try{localStorage.setItem("km_col",JSON.stringify(COL))}catch(e){}}
 var favs={},OV={},editing=null,idb=null,idbOk=false;
 try{favs=JSON.parse(localStorage.getItem("km_favs")||"{}")}catch(e){}
 try{if(localStorage.getItem("km_view")=="livro")st.view="livro"}catch(e){}
@@ -144,13 +155,15 @@ function all(){return BASE.map(function(e){return OV[e.id]||e}).concat(Object.ke
 function getE(id){return all().filter(function(e){return e.id==id})[0]}
 function hay(e){return norm([e.name,e.nome_pt,e.type,e.belt,(e.tags||[]).join(" "),e.resumo||""].concat(e.blocks.map(function(b){return b.t=="p"?(b.label||"")+" "+b.text+" "+(b.pt||""):""})).join(" "))}
 /* ---------- IndexedDB (edits) ---------- */
-function dbOpen(){return new Promise(function(res){try{var r=indexedDB.open("km_catalog",3);r.onupgradeneeded=function(ev){var d=r.result,tx=r.transaction;if(!d.objectStoreNames.contains("ov"))d.createObjectStore("ov",{keyPath:"id"});if(!d.objectStoreNames.contains("base"))d.createObjectStore("base",{keyPath:"k"});if(!d.objectStoreNames.contains("entries"))d.createObjectStore("entries",{keyPath:"id"});
+function dbOpen(){return new Promise(function(res){try{var r=indexedDB.open("km_catalog",4);r.onupgradeneeded=function(ev){var d=r.result,tx=r.transaction;if(!d.objectStoreNames.contains("ov"))d.createObjectStore("ov",{keyPath:"id"});if(!d.objectStoreNames.contains("base"))d.createObjectStore("base",{keyPath:"k"});if(!d.objectStoreNames.contains("entries"))d.createObjectStore("entries",{keyPath:"id"});if(!d.objectStoreNames.contains("thumbs"))d.createObjectStore("thumbs",{keyPath:"id"});
   if(ev.oldVersion>0&&ev.oldVersion<3){var bs=tx.objectStore("base"),g=bs.get("main");g.onsuccess=function(){var m=g.result;if(m){var es=tx.objectStore("entries");(m.entries||[]).forEach(function(e,n){if(e&&e.id!=null){e._o=n;es.put(e)}});bs.put({k:"meta",meta:m.meta||{}});bs.delete("main")}}}};
   r.onsuccess=function(){idb=r.result;idbOk=true;res()};r.onerror=function(){res()}}catch(e){res()}})}
 function dbAll(){return new Promise(function(res){if(!idbOk)return res([]);try{var q=idb.transaction("ov").objectStore("ov").getAll();q.onsuccess=function(){res(q.result||[])};q.onerror=function(){res([])}}catch(e){res([])}})}
 function dbPut(e){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("ov","readwrite");t.objectStore("ov").put(e);t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
 function dbDel(id){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction("ov","readwrite");t.objectStore("ov").delete(id);t.oncomplete=function(){res(true)};t.onerror=function(){res(false)}}catch(x){res(false)}})}
 function dbAllBase(){return new Promise(function(res){if(!idbOk)return res([]);try{var q=idb.transaction("entries").objectStore("entries").getAll();q.onsuccess=function(){res(q.result||[])};q.onerror=function(){res([])}}catch(e){res([])}})}
+function dbAllThumbs(){return new Promise(function(res){if(!idbOk)return res([]);try{var q=idb.transaction("thumbs").objectStore("thumbs").getAll();q.onsuccess=function(){res(q.result||[])};q.onerror=function(){res([])}}catch(e){res([])}})}
+function dbPutThumb(o){try{if(idbOk)idb.transaction("thumbs","readwrite").objectStore("thumbs").put(o)}catch(e){}}
 function dbGetMeta(){return new Promise(function(res){if(!idbOk)return res({});try{var q=idb.transaction("base").objectStore("base").get("meta");q.onsuccess=function(){res(q.result?q.result.meta||{}:{})};q.onerror=function(){res({})}}catch(e){res({})}})}
 function dbApply(puts,delOv,meta){return new Promise(function(res){if(!idbOk)return res(false);try{var t=idb.transaction(["entries","base","ov"],"readwrite"),es=t.objectStore("entries"),ov=t.objectStore("ov");puts.forEach(function(e){es.put(e)});delOv.forEach(function(id){ov.delete(id)});if(meta)t.objectStore("base").put({k:"meta",meta:meta});t.oncomplete=function(){res(true)};t.onerror=function(){res(false)};t.onabort=function(){res(false)}}catch(x){res(false)}})}
 /* ---------- home ---------- */
@@ -177,6 +190,9 @@ function renderFilters(){
   document.body.classList.toggle("fopen",st.fopen);
   $("#v-g").className=st.view=="golpes"?"on":"";$("#v-l").className=st.view=="livro"?"on":"";
 }
+function groupName(e){return (e.tags&&e.tags[0])||"Outros"}
+function gkey(e){return e.belt+"|"+groupName(e)}
+function groupOrder(){var m={};viewAll().forEach(function(e){var k=gkey(e),p=pstart(e)*100000+(e._o||0);if(m[k]==null||p<m[k])m[k]=p});return m}
 function filtered(){
   var q=norm(st.q.trim());
   var L=viewAll().filter(function(e){
@@ -184,23 +200,105 @@ function filtered(){
     return (!st.belt||e.belt==st.belt)&&(!st.type||e.type==st.type)&&(!st.fav||favs[e.id])&&(!q||q.split(/\s+/).every(function(w){return e._h.indexOf(w)>-1}));
   });
   if(st.view=="livro")L.sort(function(a,b){return beltRank(a.belt)-beltRank(b.belt)||pstart(a)-pstart(b)||(a._o||0)-(b._o||0)});
+  else{var go=groupOrder();L.sort(function(a,b){return beltRank(a.belt)-beltRank(b.belt)||go[gkey(a)]-go[gkey(b)]||pstart(a)-pstart(b)||(a._o||0)-(b._o||0)})}
   return L;
 }
 function firstImg(e){var b=e.blocks.filter(function(x){return x.t=="img"})[0];return b?b.src:""}
+/* ---------- miniaturas (geradas no aparelho, guardadas no IndexedDB) ---------- */
+var THUMBS={},tq=[],tbusy=false,tobs=null;
+function imgSig(x){return x.length+":"+x.slice(-24)}
+function thumbFor(e){var x=firstImg(e);if(!x)return null;var t=THUMBS[e.id];return t&&t.s==imgSig(x)?t.d:null}
+function setThumb(el,d){el.style.backgroundImage="url("+d+")"}
+function wantThumb(e,el){var d=thumbFor(e);if(d){setThumb(el,d);return}tq.push({e:e,el:el});pump()}
+function pump(){
+  if(tbusy||!tq.length)return;
+  var j=tq.shift();
+  function next(){tbusy=false;setTimeout(pump,0)}
+  if(!j.el.isConnected){pump();return}
+  var d0=thumbFor(j.e);if(d0){setThumb(j.el,d0);pump();return}
+  tbusy=true;
+  var src=firstImg(j.e),im=new Image();
+  im.onload=function(){
+    try{
+      var S=200,c=document.createElement("canvas");c.width=S;c.height=S;
+      var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,S,S);
+      var k=Math.max(S/im.width,S/im.height),w=im.width*k,h=im.height*k;
+      x.drawImage(im,(S-w)/2,(S-h)*0.35,w,h);
+      var d=c.toDataURL("image/jpeg",.72),o={id:j.e.id,s:imgSig(src),d:d};
+      THUMBS[j.e.id]=o;dbPutThumb(o);
+      if(j.el.isConnected)setThumb(j.el,d);
+    }catch(err){}
+    next();
+  };
+  im.onerror=next;im.src=src;
+}
+function observeThumb(el,e){
+  var d=thumbFor(e);if(d){setThumb(el,d);return}
+  if(!("IntersectionObserver"in window)){wantThumb(e,el);return}
+  if(!tobs)tobs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){tobs.unobserve(en.target);var e2=getE(en.target.getAttribute("data-tid"));if(e2)wantThumb(e2,en.target)}})},{rootMargin:"400px"});
+  el.setAttribute("data-tid",e.id);tobs.observe(el);
+}
+/* ---------- cartões e lista agrupada ---------- */
+function mkCard(e){
+  var b=beltInfo(e.belt),im=firstImg(e);
+  var c=document.createElement("div");c.className="card";
+  c.innerHTML='<div class="thumb"'+(im?"":' style="background:'+b[2]+'33"')+'></div><div class="cbody"><h3>'+esc(e.name)+'</h3><div class="pt">'+esc(e.nome_pt||"")+'</div><div class="meta"><span><span class="dot" style="background:'+b[2]+'"></span> '+esc(b[1])+'</span><span>'+esc(e.type)+'</span><span>pág. '+esc(e.pages)+'</span>'+(OV[e.id]?'<span title="Editado por você">✎</span>':"")+'<button class="fav'+(favs[e.id]?" on":"")+'" aria-label="Favorito">'+(favs[e.id]?"★":"☆")+"</button></div></div>";
+  if(im)observeThumb(c.querySelector(".thumb"),e);
+  c.querySelector(".fav").onclick=function(ev){ev.stopPropagation();toggleFav(e.id);render()};
+  c.onclick=function(){location.hash="#/"+e.id};
+  return c;
+}
+function mkGrid(items){var g=document.createElement("div");g.className="grid";items.forEach(function(e){g.appendChild(mkCard(e))});return g}
+function colHead(cls,key,inner,onSet){
+  var open=!COL[key],b=document.createElement("button");b.className=cls;
+  b.innerHTML=inner+'<span class="car">'+(open?"▾":"▸")+"</span>";
+  b.onclick=function(){if(COL[key])delete COL[key];else COL[key]=1;saveCol();render()};
+  return b;
+}
 function render(){
   renderFilters();
+  if(tobs)tobs.disconnect();tq=[];
   var L=filtered(),el=$("#list");el.innerHTML="";
   $("#count").textContent=L.length+" de "+viewAll().length+(st.view=="livro"?" itens":" golpes");
-  if(!all().length){document.body.classList.add("tools");el.innerHTML='<div class="box" style="grid-column:1/-1"><h4>Primeiro uso</h4>Este app não traz o conteúdo do livro. Toque em <b>⬆ Importar dados</b> (abaixo) e escolha os arquivos <b>krav-maga-dados-&lt;faixa&gt;-&lt;parte&gt;.json</b>, um de cada vez. A importação é incremental e pergunta o que fazer com golpes repetidos. Depois disso tudo funciona offline. O botão <b>⋯</b> no topo mostra de novo as opções de importar e exportar.</div>';return}
-  if(!L.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nada encontrado.</div>';return}
-  L.forEach(function(e){
-    var b=beltInfo(e.belt),im=firstImg(e);
-    var c=document.createElement("div");c.className="card";
-    c.innerHTML='<div class="thumb"'+(im?' style="background-image:url('+im+')"':"")+'></div><div class="cbody"><h3>'+esc(e.name)+'</h3><div class="pt">'+esc(e.nome_pt||"")+'</div><div class="meta"><span><span class="dot" style="background:'+b[2]+'"></span> '+esc(b[1])+'</span><span>'+esc(e.type)+'</span><span>pág. '+esc(e.pages)+'</span>'+(OV[e.id]?'<span title="Editado por você">✎</span>':"")+'<button class="fav'+(favs[e.id]?" on":"")+'" aria-label="Favorito">'+(favs[e.id]?"★":"☆")+"</button></div></div>";
-    c.querySelector(".fav").onclick=function(ev){ev.stopPropagation();toggleFav(e.id);render()};
-    c.onclick=function(){location.hash="#/"+e.id};
-    el.appendChild(c);
+  var grouped=st.view=="golpes";
+  $("#colb").style.display=grouped?"":"none";
+  if(!all().length){document.body.classList.add("tools");el.innerHTML='<div class="box"><h4>Primeiro uso</h4>Este app não traz o conteúdo do livro. Toque em <b>⬆ Importar dados</b> (abaixo) e escolha os arquivos <b>krav-maga-dados-&lt;faixa&gt;-&lt;parte&gt;.json</b>, um de cada vez. A importação é incremental e pergunta o que fazer com golpes repetidos. Depois disso tudo funciona offline. O botão <b>⋯</b> no topo mostra de novo as opções de importar e exportar.</div>';return}
+  if(!L.length){el.innerHTML='<div class="empty">Nada encontrado.</div>';return}
+  var searching=!!(st.q.trim()||st.type||st.fav);
+  var byBelt={},order=[];
+  L.forEach(function(e){if(!byBelt[e.belt]){byBelt[e.belt]=[];order.push(e.belt)}byBelt[e.belt].push(e)});
+  var anyOpen=false;
+  order.forEach(function(bk){
+    var items=byBelt[bk],bi=beltInfo(bk),dot='<span class="dot" style="background:'+bi[2]+'"></span> ';
+    var head=dot+esc(bi[1])+' <span class="n">'+items.length+"</span>";
+    if(!grouped){
+      var h=document.createElement("div");h.className="beth";h.innerHTML=head;el.appendChild(h);
+      el.appendChild(mkGrid(items));return;
+    }
+    var sec=document.createElement("section");sec.className="sec";
+    var bkey=bk,bopen=searching||!COL[bkey];
+    var bh=colHead("sech",bkey,head);
+    if(searching){bh.onclick=null;bh.style.cursor="default";bh.querySelector(".car").textContent=""}
+    sec.appendChild(bh);
+    if(bopen){
+      var gs={},gorder=[];
+      items.forEach(function(e){var g=groupName(e);if(!gs[g]){gs[g]=[];gorder.push(g)}gs[g].push(e)});
+      gorder.forEach(function(g){
+        var gk=bk+"|"+g,gopen=searching||!COL[gk];
+        var gh=colHead("grph",gk,esc(g)+' <span class="n">'+gs[g].length+"</span>");
+        if(searching){gh.onclick=null;gh.style.cursor="default";gh.querySelector(".car").textContent=""}
+        sec.appendChild(gh);
+        if(gopen){sec.appendChild(mkGrid(gs[g]));anyOpen=true}
+      });
+    }
+    el.appendChild(sec);
   });
+  $("#colb").textContent=(!searching&&!anyOpen)?"Expandir tudo":"Recolher tudo";
+}
+function collapseAll(open){
+  if(open){COL={}}
+  else{var go=groupOrder();BELTS.forEach(function(b){COL[b[0]]=1});Object.keys(go).forEach(function(k){COL[k]=1})}
+  saveCol();render();
 }
 function toggleFav(id){favs[id]=!favs[id];if(!favs[id])delete favs[id];saveFavs()}
 /* ---------- detail (read) ---------- */
@@ -379,6 +477,7 @@ function setView(v){st.view=v;if(v=="golpes"&&st.type=="Livro")st.type="";try{lo
 $("#v-g").onclick=function(){setView("golpes")};
 $("#v-l").onclick=function(){setView("livro")};
 $("#filb").onclick=function(){st.fopen=!st.fopen;render()};
+$("#colb").onclick=function(){collapseAll($("#colb").textContent=="Expandir tudo")};
 $("#menub").onclick=function(){var b=document.body;b.classList.toggle("tools");if(b.classList.contains("tools"))$("#tools").scrollIntoView({behavior:"smooth"})};
 function route(){
   var m=location.hash.match(/^#\/(.+)$/);
@@ -386,7 +485,7 @@ function route(){
   else{document.body.classList.remove("show-detail");render()}
 }
 window.addEventListener("hashchange",route);
-dbOpen().then(function(){return Promise.all([dbAll(),dbAllBase(),dbGetMeta()])}).then(function(r){r[0].forEach(function(x){OV[x.id]=x});BASE=r[1]||[];sortBase();META=r[2]||{};$("#srcnote").textContent=META.note||"";route()});
+dbOpen().then(function(){return Promise.all([dbAll(),dbAllBase(),dbGetMeta(),dbAllThumbs()])}).then(function(r){r[0].forEach(function(x){OV[x.id]=x});BASE=r[1]||[];(r[3]||[]).forEach(function(t){THUMBS[t.id]=t});sortBase();META=r[2]||{};$("#srcnote").textContent=META.note||"";route()});
 try{if("serviceWorker"in navigator&&location.protocol.indexOf("http")==0)navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
 </body>
